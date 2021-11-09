@@ -22,9 +22,6 @@ if __name__ == '__main__':
     for i in range(len(train_l)):
         train_l[i] = int(train_l[i])
 
-    print(train_l)
-    print(train_d[0])
-
     with open('test.dat', 'r') as test:
         test_d = []
         for r in test:
@@ -36,22 +33,41 @@ if __name__ == '__main__':
             test_d[i][j] = test_d[i][j].strip('[,]')
             test_d[i][j] = int(test_d[i][j])
 
-    print(test_d[0])
-
+    """
     sc = StandardScaler()
     sc.fit(train_d)
     train_d_std = sc.transform(train_d)
     test_d_std = sc.transform(test_d)
+    """
 
     model = SVC(kernel='linear', random_state=None)
-    model.fit(train_d_std, train_l)
-    pred_train = model.predict(train_d_std)
+    model.fit(train_d, train_l)
+    pred_train = model.predict(train_d)
     accuracy_train = accuracy_score(train_l, pred_train)
-    print('トレーニングデータに対する正解率： %.2f' % accuracy_train)
+    print('SVM；トレーニングデータに対する正解率： %.2f' % accuracy_train)
 
-    predict = model.predict(test_d_std)
-    print(predict)
-    print(len(predict))
+    """
+    train_predict = model.predict(train_d_std)
+    n = 0
+    p = 0
+    for i in range(len(train_predict)):
+        if train_predict[i] == 1:
+            n += 1
+            if train_l == 1:
+                p += 1
+    precision = p / n
+    for i in range(len(train_l)):
+        if train_l[i] == 1:
+            n += 1
+            if train_predict[i] == 1:
+                p += 1
+    recall = p / n
+
+    F_measure = 2 * recall * precision / (recall + precision)
+    print('F値: %.2f' % F_measure)
+    """
+
+    predict = model.predict(test_d)
     answerfile = 'test_SVM_ans_1191201079.dat'
     f = open(answerfile, 'w')
     f.close()
