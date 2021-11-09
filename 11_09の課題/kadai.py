@@ -5,6 +5,9 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import torch
+import torch.nn as nn
+
 
 if __name__ == '__main__':
     with open('train.dat', 'r') as train:
@@ -46,14 +49,13 @@ if __name__ == '__main__':
     accuracy_train = accuracy_score(train_l, pred_train)
     print('SVM；トレーニングデータに対する正解率： %.2f' % accuracy_train)
 
-    """
-    train_predict = model.predict(train_d_std)
+    train_predict = model.predict(train_d)
     n = 0
     p = 0
     for i in range(len(train_predict)):
         if train_predict[i] == 1:
             n += 1
-            if train_l == 1:
+            if train_l[i] == 1:
                 p += 1
     precision = p / n
     for i in range(len(train_l)):
@@ -65,7 +67,7 @@ if __name__ == '__main__':
 
     F_measure = 2 * recall * precision / (recall + precision)
     print('F値: %.2f' % F_measure)
-    """
+
 
     predict = model.predict(test_d)
     answerfile = 'test_SVM_ans_1191201079.dat'
