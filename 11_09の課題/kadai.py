@@ -9,6 +9,21 @@ import torch
 import torch.nn as nn
 
 
+class MLP5(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(MLP5, self).__init__()
+        self.l1 = nn.Linear(input_size, hidden_size)
+        self.l2 = nn.Linear(hidden_size, hidden_size)
+        self.l3 = nn.Linear(hidden_size, hidden_size)
+        self.l4 = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        h1 = torch.sigmoid(self.l1(x))
+        h2 = torch.sigmoid(self.l2(h1))
+        h3 = torch.sigmoid(self.l3(h2))
+        return torch.sigmoid(self.l4(h3))
+
+
 if __name__ == '__main__':
     with open('train.dat', 'r') as train:
         train_l = []
@@ -66,8 +81,7 @@ if __name__ == '__main__':
     recall = p / n
 
     F_measure = 2 * recall * precision / (recall + precision)
-    print('F値: %.2f' % F_measure)
-
+    print('F値_SVM: %.2f' % F_measure)
 
     predict = model.predict(test_d)
     answerfile = 'test_SVM_ans_1191201079.dat'
@@ -77,3 +91,72 @@ if __name__ == '__main__':
         for i in range(len(predict)):
             print(predict[i], end=' ', file=f)
             print(test_d[i], end='\n', file=f)
+
+
+    #MLP
+    x = torch.tensor(train_d, dtype=torch.float)
+    y = torch.tensor(train_l, dtype=torch.float)
+    y = y.unsqueeze(1)
+
+    model = MLP5(33, 3, 1)
+    optimizer = torch.optim.Adam(model.parameters())
+    criterion = nn.MSELoss()
+
+    history = []
+    max_epoch = 10000
+    for epoch in range(max_epoch):
+        pred = model(x)
+        error = criterion(pred, y)
+        history.append(error.item())
+        model.zero_grad()
+        error.backward()
+        optimizer.step()
+
+    """
+    history = np.array(history, dtype=np.float32)
+    epochs = np.arange(1, max_epoch + 1)
+    plt.plot(epochs, history)
+    plt.show()
+    """
+    x_t = torch.tensor(test_d, dtype=torch.float)
+    prediction = model(x_t)
+    ans = []
+    for i in range(prediction.numel()):
+        if prediction[i].item() >= 0.5:
+            ans.append(1)
+        if prediction[i].item() < 0.5:
+            ans.append(0)
+    # print(ans)
+    answerfile = 'test_NNW_ans_1191201079.dat'
+    f = open(answerfile, 'w')
+    f.close()
+    with open(answerfile, 'a') as f:
+        for i in range(len(predict)):
+            print(ans[i], end=' ', file=f)
+            print(test_d[i], end='\n', file=f)
+
+    x_t_N = torch.tensor(train_d, dtype=torch.float)
+    prediction_t = model(x_t_N)
+    ans = []
+    for i in range(prediction_t.numel()):
+        if prediction_t[i].item() >= 0.5:
+            ans.append(1)
+        if prediction_t[i].item() < 0.5:
+            ans.append(0)
+    n = 0
+    p = 0
+    for i in range(len(ans)):
+        if ans[i] == 1:
+            n += 1
+            if train_l[i] == 1:
+                p += 1
+    precision = p / n
+    for i in range(len(train_l)):
+        if train_l[i] == 1:
+            n += 1
+            if ans[i] == 1:
+                p += 1
+    recall = p / n
+
+    F_measure = 2 * recall * precision / (recall + precision)
+    print('F値_NNW: %.2f' % F_measure)
